@@ -10,8 +10,9 @@ const str = "/";
 const lastVisitProxyCookie = "__PROXY_VISITEDSITE__";
 const passwordCookieName = "__PROXY_PWD__";
 const proxyHintCookieName = "__PROXY_HINT__";
-const password = "mumuhaha";
+const password = "123";
 const showPasswordPage = true;
+const showProxyHint = false;
 const replaceUrlObj = "__location__yproxy__";
 
 var thisProxyServerUrlHttps;
@@ -1291,7 +1292,7 @@ async function handleRequest(request) {
 
   var modifiedResponse;
   var bd;
-  var hasProxyHintCook = (getCook(proxyHintCookieName, siteCookie) != "");
+  var hasProxyHintCook = showProxyHint && (getCook(proxyHintCookieName, siteCookie) != "");
   const contentType = response.headers.get("Content-Type");
 
 
@@ -1399,7 +1400,7 @@ async function handleRequest(request) {
         // the proxy hint must be written as a single IIFE, or it will show error in example.com   idk what's wrong
         (function () {
           // proxy hint
-          ${((!hasProxyHintCook) ? proxyHintInjection : "")}
+          ${((showProxyHint && !hasProxyHintCook) ? proxyHintInjection : "")}
         })();
 
 
@@ -1580,7 +1581,7 @@ async function handleRequest(request) {
 
 
 
-  if (!hasProxyHintCook) {
+  if (showProxyHint && !hasProxyHintCook) {
     //设置content立刻过期，防止多次弹代理警告（但是如果是Content-no-change还是会弹出）
     modifiedResponse.headers.set("Cache-Control", "max-age=0");
   }
@@ -1652,7 +1653,7 @@ function handleCookieHeader(modifiedResponse, isHTML, response, actualUrlStr, ac
     let cookieValue = lastVisitProxyCookie + "=" + actualUrl.origin + "; Path=/; Domain=" + thisProxyServerUrl_hostOnly;
     headers.append("Set-Cookie", cookieValue);
 
-    if (response.body && !hasProxyHintCook) {
+    if (showProxyHint && response.body && !hasProxyHintCook) {
       const expiryDate = new Date();
       expiryDate.setTime(expiryDate.getTime() + 24 * 60 * 60 * 1000);
       var hintCookie = `${proxyHintCookieName}=1; expires=${expiryDate.toUTCString()}; path=/`;
